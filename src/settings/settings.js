@@ -1,10 +1,10 @@
 export const PRESETS = {
-  potato: { render: 4, shadow: 0, fog: 0.018, bloom: false, ao: false, water: 0, clouds: 0, dpr: 0.7, viewBob: false, fov: 72, chunk: 4, particles: 0.25, vsync: false },
-  low: { render: 6, shadow: 0, fog: 0.014, bloom: false, ao: true, water: 0, clouds: 0.2, dpr: 0.9, viewBob: true, fov: 78, chunk: 6, particles: 0.5, vsync: false },
-  medium: { render: 8, shadow: 0, fog: 0.011, bloom: true, ao: true, water: 1, clouds: 0.45, dpr: 1, viewBob: true, fov: 80, chunk: 8, particles: 0.75, vsync: true },
-  high: { render: 12, shadow: 1, fog: 0.008, bloom: true, ao: true, water: 2, clouds: 0.6, dpr: 1.15, viewBob: true, fov: 82, chunk: 12, particles: 1, vsync: true },
-  ultra: { render: 16, shadow: 1, fog: 0.006, bloom: true, ao: true, water: 2, clouds: 0.7, dpr: 1.35, viewBob: true, fov: 84, chunk: 16, particles: 1, vsync: true },
-  extreme: { render: 24, shadow: 1, fog: 0.0045, bloom: true, ao: true, water: 2, clouds: 0.8, dpr: 1.5, viewBob: true, fov: 86, chunk: 24, particles: 1, vsync: true },
+  potato: { render: 4, shadow: 0, fog: 0.009, bloom: false, ao: false, water: 0, clouds: 0, dpr: 0.7, viewBob: false, fov: 72, chunk: 4, particles: 0.25, vsync: false },
+  low: { render: 6, shadow: 0, fog: 0.007, bloom: false, ao: true, water: 0, clouds: 0.2, dpr: 0.9, viewBob: true, fov: 78, chunk: 6, particles: 0.5, vsync: false },
+  medium: { render: 8, shadow: 0, fog: 0.0055, bloom: true, ao: true, water: 1, clouds: 0.45, dpr: 1, viewBob: true, fov: 80, chunk: 8, particles: 0.75, vsync: true },
+  high: { render: 12, shadow: 1, fog: 0.004, bloom: true, ao: true, water: 2, clouds: 0.6, dpr: 1.15, viewBob: true, fov: 82, chunk: 12, particles: 1, vsync: true },
+  ultra: { render: 16, shadow: 1, fog: 0.003, bloom: true, ao: true, water: 2, clouds: 0.7, dpr: 1.35, viewBob: true, fov: 84, chunk: 16, particles: 1, vsync: true },
+  extreme: { render: 24, shadow: 1, fog: 0.0022, bloom: true, ao: true, water: 2, clouds: 0.8, dpr: 1.5, viewBob: true, fov: 86, chunk: 24, particles: 1, vsync: true },
 };
 
 export const DEFAULT_SETTINGS = {
@@ -14,7 +14,7 @@ export const DEFAULT_SETTINGS = {
   sensitivity: 0.35,
   invertY: false,
   dpr: 1,
-  fog: 0.011,
+  fog: 0.0055,
   bloom: true,
   ao: true,
   water: 1,

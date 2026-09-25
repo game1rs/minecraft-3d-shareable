@@ -138,15 +138,16 @@ void main(){
   }
 
   float NdotL = max(dot(vNormal, normalize(uSunDir)), 0.0);
-  float skyLight = vSky;
+  float skyLight = max(vSky, 0.08);
   float blockLight = vBlock;
-  float ao = mix(0.55,1.0,vAo);
+  float ao = mix(0.75,1.0,vAo);
 
-  vec3 sun = uSunColor * NdotL * skyLight * 0.95;
-  vec3 sky = uSkyColor * (0.35 + 0.65*max(dot(vNormal, vec3(0,1,0)),0.0)) * skyLight * 0.55;
-  vec3 block = vec3(1.0,0.65,0.28) * blockLight * 1.6;
+  vec3 sun = uSunColor * NdotL * skyLight * 1.85;
+  vec3 sky = uSkyColor * (0.55 + 0.45*max(dot(vNormal, vec3(0,1,0)),0.0)) * skyLight * 1.15;
+  vec3 block = vec3(1.0,0.68,0.32) * blockLight * 2.4;
 
-  vec3 diffuse = albedo * (sun + sky + block*0.9) * ao;
+  vec3 ambient = albedo * 0.28 * skyLight;
+  vec3 diffuse = albedo * (sun + sky + block*0.9) * ao + ambient;
 
   float rough = clamp(vRough,0.05,0.95);
   vec3 halfDir = normalize(normalize(uSunDir)+vViewDir);

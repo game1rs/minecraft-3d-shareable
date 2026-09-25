@@ -716,12 +716,13 @@ class Game {
     frustumPlanes(vp, this.frustum);
 
     const dayFactor = this.dayTime;
-    const sunColor = dayFactor > 0.2 && dayFactor < 0.8 ? [1, 0.95, 0.85] : [0.6, 0.6, 0.8];
-    const skyTop = dayFactor > 0.2 && dayFactor < 0.8 ? [0.28, 0.52, 0.82] : [0.04, 0.06, 0.12];
-    const skyHorizon = dayFactor > 0.2 && dayFactor < 0.8 ? [0.55, 0.72, 0.88] : [0.08, 0.1, 0.18];
+    const isDay = dayFactor > 0.2 && dayFactor < 0.8;
+    const sunColor = isDay ? [1.15, 1.05, 0.95] : [0.7, 0.75, 0.95];
+    const skyTop = isDay ? [0.42, 0.68, 0.96] : [0.06, 0.08, 0.18];
+    const skyHorizon = isDay ? [0.72, 0.85, 0.98] : [0.12, 0.14, 0.28];
     const fogColor = skyHorizon;
-    const fogDensity = this.settings.fog * (this.weather.rain > 0.3 ? 1.6 : 1);
-    const exposure = 1.1;
+    const fogDensity = this.settings.fog * 0.55 * (this.weather.rain > 0.3 ? 1.4 : 1);
+    const exposure = 1.75;
 
     this.renderer.beginFrame(this.viewMat, this.projMat, [eye.x, eye.y, eye.z], this.time * 12, this.sunDir, sunColor, skyTop, skyHorizon, fogColor, dayFactor, fogDensity, this.weather.rain, this.weather.rain > 0.2 ? 1 : 0, exposure, qualityToInt(this.settings.preset));
 
@@ -766,7 +767,7 @@ class Game {
     const { multiply } = requireMat();
     multiply(vp, this.projMat, this.viewMat);
     frustumPlanes(vp, this.frustum);
-    this.renderer.beginFrame(this.viewMat, this.projMat, eye, this.time * 6, [0.4, 0.8, 0.2], [1, 0.95, 0.85], [0.28, 0.52, 0.82], [0.55, 0.72, 0.88], [0.55, 0.72, 0.88], 0.011, 0.25, 0, 0, 1.1, 2);
+    this.renderer.beginFrame(this.viewMat, this.projMat, eye, this.time * 6, [0.4, 0.8, 0.2], [1.15, 1.05, 0.95], [0.42, 0.68, 0.96], [0.72, 0.85, 0.98], [0.72, 0.85, 0.98], 0.006, 0.35, 0, 0, 1.75, 2);
     if (this.chunkManager) {
       const meshes = this.chunkManager.getMeshesInFrustum(this.frustum, eye[1]);
       for (const m of meshes) this.renderer.drawChunkMesh(m.mesh, m.x, m.z);
