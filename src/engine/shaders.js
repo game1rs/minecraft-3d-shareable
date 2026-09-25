@@ -1,5 +1,6 @@
 export const chunkVert = `#version 300 es
 precision highp float;
+precision highp int;
 layout(location=0) in vec3 aPos;
 layout(location=1) in vec2 aUv;
 layout(location=2) in float aNormal;
@@ -39,7 +40,7 @@ out vec3 vViewDir;
 void main(){
   vec3 pos = aPos;
   float tile = aTile;
-  if(int(tile)==13 || int(tile)==25){ // water or lava wobble
+  if(int(tile)==13 || int(tile)==25){
     if(aNormal==2.0){
       pos.x += sin(pos.x*0.6 + uWaterTime*1.2 + pos.z*0.4)*0.06;
       pos.z += cos(pos.z*0.6 + uWaterTime*1.0 + pos.x*0.3)*0.06;
@@ -74,6 +75,9 @@ void main(){
 
 export const chunkFrag = `#version 300 es
 precision highp float;
+precision highp int;
+precision highp sampler2D;
+precision highp sampler2DArray;
 uniform sampler2DArray uAtlas;
 uniform vec3 uSunDir;
 uniform vec3 uSunColor;
@@ -117,7 +121,6 @@ void main(){
   if(base.r < 0.02 && base.g < 0.02 && base.b < 0.02){
     discard;
   }
-  float foliage = step(0.5, mod(vFlag,2.0));
   float cutout = step(0.5, mod(floor(vFlag/2.0),2.0));
   float lava = step(0.5, mod(floor(vFlag/4.0),2.0));
   float tint = step(0.5, mod(floor(vFlag/16.0),2.0));
@@ -162,13 +165,11 @@ void main(){
 
   float wet = uWet * (1.0 - metal) * (1.0 - glass) * skyLight;
   color = mix(color, color*0.86 + vec3(0.08,0.12,0.16), wet*0.35);
-  float wetSpec = wet*0.5;
-  color += vec3(wetSpec);
+  color += vec3(wet*0.5);
 
   float fog = 1.0 - exp(-vDist * uFogDensity * (0.55 + uRain*0.9));
   fog = clamp(fog,0.0,0.92);
-  vec3 fogCol = uFogColor;
-  fogCol = mix(fogCol, uSkyColor*0.9, 0.25 + uDayFactor*0.25);
+  vec3 fogCol = mix(uFogColor, uSkyColor*0.9, 0.25 + uDayFactor*0.25);
   color = mix(color, fogCol, fog);
 
   float distFade = clamp(1.0 - (vDist-180.0)/120.0, 0.0,1.0);
@@ -198,6 +199,7 @@ void main(){
 
 export const skyVert = `#version 300 es
 precision highp float;
+precision highp int;
 layout(location=0) in vec2 aPos;
 out vec2 vUv;
 out vec3 vDir;
@@ -215,6 +217,7 @@ void main(){
 
 export const skyFrag = `#version 300 es
 precision highp float;
+precision highp int;
 in vec2 vUv;
 in vec3 vDir;
 uniform vec3 uSunDir;
@@ -248,7 +251,6 @@ void main(){
   vec3 sky = mix(uSkyTop, uSkyHorizon, horizon);
   float sun = pow(max(sunDot,0.0), 128.0)*1.8 + pow(max(sunDot,0.0), 16.0)*0.35;
   sky += uSunColor * sun * 0.9;
-
   vec2 cloudUv = dir.xz / (dir.y*0.6+0.6);
   cloudUv *= 1.5;
   cloudUv += uTime*0.015;
@@ -258,23 +260,21 @@ void main(){
   cl *= (1.0 - horizon*0.6);
   sky = mix(sky, vec3(0.92,0.93,0.96), cl*0.55);
   sky = mix(sky, uFogColor*0.85, uRain*0.55);
-
   float stars = 0.0;
   if(uDay < 0.25 || uDay > 0.75){
     float s = hash(dir.xz*400.0);
     if(s>0.9975) stars = pow(s, 20.0)*3.0 * (1.0 - max(dir.y,0.0));
   }
   sky += vec3(stars);
-
   float moon = pow(max(dot(dir, -normalize(uSunDir)),0.0), 256.0)*0.6;
   sky += vec3(moon*0.35);
-
   outColor = vec4(sky,1.0);
 }
 `;
 
 export const waterVert = `#version 300 es
 precision highp float;
+precision highp int;
 layout(location=0) in vec3 aPos;
 layout(location=1) in vec2 aUv;
 uniform mat4 uView;
@@ -297,6 +297,7 @@ void main(){
 
 export const waterFrag = `#version 300 es
 precision highp float;
+precision highp int;
 in vec2 vUv;
 in vec3 vWorld;
 uniform float uTime;
@@ -316,6 +317,7 @@ void main(){
 
 export const postVert = `#version 300 es
 precision highp float;
+precision highp int;
 layout(location=0) in vec2 aPos;
 out vec2 vUv;
 void main(){
@@ -326,6 +328,8 @@ void main(){
 
 export const postFrag = `#version 300 es
 precision highp float;
+precision highp int;
+precision highp sampler2D;
 in vec2 vUv;
 uniform sampler2D uScene;
 uniform sampler2D uBloom;
@@ -336,10 +340,6 @@ uniform float uUnderwater;
 uniform float uDamage;
 uniform int uQuality;
 out vec4 outColor;
-vec3 aces(vec3 x){
-  float a=2.51; float b=0.03; float c=2.43; float d=0.59; float e=0.14;
-  return clamp((x*(a*x+b))/(x*(c*x+d)+e),0.0,1.0);
-}
 void main(){
   vec3 col = texture(uScene, vUv).rgb;
   vec3 bloom = texture(uBloom, vUv).rgb;
@@ -371,13 +371,16 @@ export const quadVert = postVert;
 
 export const bloomFrag = `#version 300 es
 precision highp float;
+precision highp int;
+precision highp sampler2D;
 in vec2 vUv;
 uniform sampler2D uTex;
 uniform vec2 uDir;
 out vec4 outColor;
 void main(){
   vec3 c = vec3(0.0);
-  float w[5]; w[0]=0.227027; w[1]=0.1945946; w[2]=0.1216216; w[3]=0.054054; w[4]=0.016216;
+  float w[5];
+  w[0]=0.227027; w[1]=0.1945946; w[2]=0.1216216; w[3]=0.054054; w[4]=0.016216;
   c += texture(uTex, vUv).rgb * w[0];
   for(int i=1;i<5;i++){
     c += texture(uTex, vUv + uDir*float(i)).rgb * w[i];
@@ -389,6 +392,8 @@ void main(){
 
 export const brightFrag = `#version 300 es
 precision highp float;
+precision highp int;
+precision highp sampler2D;
 in vec2 vUv;
 uniform sampler2D uScene;
 uniform float uThreshold;
