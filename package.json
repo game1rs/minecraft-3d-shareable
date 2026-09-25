@@ -1,0 +1,10 @@
+{
+  "name": "blockwild",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node tools/test-world.js"
+  }
+}
