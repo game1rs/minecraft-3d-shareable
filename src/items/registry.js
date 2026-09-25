@@ -301,12 +301,33 @@ export function itemMatches(got, need) {
 export const PLANKS = ["verdant_planks", "amberpine_planks", "lushbark_planks", "silverwood_planks", "mirewood_planks"];
 export const LOGS = ["verdant_log", "amberpine_log", "lushbark_log", "silverwood_log", "mirewood_log"];
 
-export function makeStack(key, count = 1, extra = null) {
+export const MAX_STACK = 64;
+
+export function makeStack(key, count = 1, durOrExtra = 0, maxDur = 0) {
   const def = getItem(key);
   if (!def) return null;
-  const stack = { key, count, dur: def.durability || 0, maxDur: def.durability || 0 };
-  if (extra) Object.assign(stack, extra);
+  let dur = 0;
+  let mDur = def.durability || 0;
+  let extra = null;
+  if (typeof durOrExtra === 'object' && durOrExtra !== null) {
+    extra = durOrExtra;
+    if (extra.dur != null) dur = extra.dur;
+    if (extra.maxDur != null) mDur = extra.maxDur;
+  } else {
+    dur = durOrExtra | 0;
+    if (maxDur) mDur = maxDur | 0;
+  }
+  const stack = { key, count: count | 0, dur, maxDur: mDur };
+  if (extra) {
+    for (const k in extra) {
+      if (k !== 'dur' && k !== 'maxDur') stack[k] = extra[k];
+    }
+  }
   return stack;
+}
+
+export function getItemDef(key) {
+  return getItem(key);
 }
 
 export function stackKey(stack) {
