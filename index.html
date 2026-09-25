@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLOCKWILD — Original Voxel Survival</title>
+<style>
+@font-face{font-family:'DejaVuSans';src:url('./assets/fonts/DejaVuSans.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'DejaVuSans';src:url('./assets/fonts/DejaVuSans-Bold.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'DejaVuSerif';src:url('./assets/fonts/DejaVuSerif.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'DejaVuSerif';src:url('./assets/fonts/DejaVuSerif-Bold.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0b0e11;color:#e8e2d6;font-family:'DejaVuSans',system-ui,sans-serif;user-select:none}
+#game-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair;z-index:0;pointer-events:auto}
+#ui-root{position:absolute;inset:0;pointer-events:auto;z-index:10}
+#hud{position:absolute;inset:0;pointer-events:none;display:none;z-index:5}
+#crosshair{position:absolute;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%);pointer-events:none}
+#crosshair::before,#crosshair::after{content:'';position:absolute;background:#f3efe6;box-shadow:0 0 4px rgba(0,0,0,0.6)}
+#crosshair::before{left:10px;top:0;width:2px;height:22px;opacity:0.9}
+#crosshair::after{left:0;top:10px;width:22px;height:2px;opacity:0.9}
+#hotbar{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:4px;padding:6px;background:rgba(18,16,14,0.82);border:1px solid rgba(255,255,255,0.12);border-radius:10px;backdrop-filter:blur(8px);pointer-events:auto;z-index:6}
+.hotbar-slot{width:54px;height:54px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:8px;position:relative;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#e8e2d6;transition:all 0.12s;pointer-events:auto}
+.hotbar-slot.selected{background:rgba(214,162,78,0.28);border-color:rgba(214,162,78,0.9);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.4),0 0 0 1px rgba(214,162,78,0.5) inset}
+.item-count{position:absolute;right:4px;bottom:2px;font-size:11px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,0.9)}
+.dur-bar{position:absolute;left:2px;right:2px;bottom:2px;height:4px;background:rgba(0,0,0,0.6);border-radius:2px;overflow:hidden}
+.dur-bar div{height:100%;background:linear-gradient(90deg,#6fcf6f,#d6a24e);transition:width 0.1s}
+#health,#hunger{position:absolute;left:18px;display:flex;gap:3px;pointer-events:none;z-index:6}
+#health{bottom:88px}
+#hunger{bottom:64px}
+.heart,.hunger{width:18px;height:18px;border-radius:3px;position:relative}
+.heart.full{background:linear-gradient(180deg,#ff6b6b,#c83a3a)}
+.heart.half{background:linear-gradient(90deg,#ff6b6b 50%,rgba(255,255,255,0.15) 50%)}
+.heart.empty{background:rgba(255,255,255,0.12)}
+.hunger.full{background:linear-gradient(180deg,#d6a24e,#8a642a)}
+.hunger.half{background:linear-gradient(90deg,#d6a24e 50%,rgba(255,255,255,0.12) 50%)}
+.hunger.empty{background:rgba(255,255,255,0.1)}
+#block-highlight{position:absolute;left:50%;top:18%;transform:translateX(-50%);background:rgba(12,12,14,0.72);border:1px solid rgba(255,255,255,0.12);padding:6px 12px;border-radius:8px;font-size:12px;letter-spacing:0.02em;display:none;pointer-events:none;z-index:7}
+#debug{position:absolute;left:10px;top:10px;background:rgba(0,0,0,0.55);padding:8px 10px;border-radius:6px;font-family:monospace;font-size:11px;line-height:1.35;white-space:pre-wrap;max-width:520px;display:none;pointer-events:none;z-index:7}
+#tooltip{position:fixed;display:none;background:rgba(18,16,14,0.94);border:1px solid rgba(214,162,78,0.5);padding:10px 12px;border-radius:8px;min-width:180px;max-width:300px;z-index:9999;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,0.6)}
+.tt-name{font-weight:700;font-size:13px;margin-bottom:4px;color:#f3efe6}
+.tt-desc{font-size:11px;opacity:0.8;line-height:1.35}
+.tt-meta{font-size:10px;margin-top:6px;opacity:0.6}
+#menu,#pause,#settings,#world-list,#create-world,#howto,#inventory{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 120% at 30% 20%,rgba(214,162,78,0.18),transparent 55%),radial-gradient(100% 100% at 80% 80%,rgba(78,140,162,0.18),transparent 60%),linear-gradient(180deg,rgba(12,14,16,0.92),rgba(8,10,12,0.96));backdrop-filter:blur(12px);pointer-events:auto;z-index:20}
+#menu{flex-direction:column;gap:18px}
+#menu .logo{font-family:'DejaVuSerif',serif;font-weight:700;font-size:64px;letter-spacing:0.06em;color:#f3efe6;text-shadow:0 2px 0 rgba(0,0,0,0.6),0 8px 32px rgba(214,162,78,0.35);margin-bottom:8px}
+#menu .logo span{color:#d6a24e}
+#menu .subtitle{font-size:13px;letter-spacing:0.28em;text-transform:uppercase;opacity:0.6;margin-bottom:24px}
+.menu-btn{width:280px;padding:14px 18px;background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03));border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#f3efe6;font-weight:700;font-size:14px;letter-spacing:0.04em;cursor:pointer;transition:all 0.14s;text-align:left;display:flex;justify-content:space-between;align-items:center;pointer-events:auto;position:relative;z-index:30}
+.menu-btn:hover{background:linear-gradient(180deg,rgba(214,162,78,0.28),rgba(214,162,78,0.12));border-color:rgba(214,162,78,0.6);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,0.35)}
+.menu-btn:active{transform:translateY(0px) scale(0.98)}
+.menu-btn small{opacity:0.6;font-weight:400;font-size:11px}
+#pause,#settings,#world-list,#create-world,#howto,#inventory{display:none;flex-direction:column;gap:14px;padding:24px}
+.panel{width:min(760px,92vw);background:rgba(18,16,14,0.88);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:20px;box-shadow:0 16px 48px rgba(0,0,0,0.55)}
+.panel h2{font-family:'DejaVuSerif',serif;font-size:22px;margin-bottom:14px;color:#f3efe6}
+.panel h3{font-size:13px;letter-spacing:0.12em;text-transform:uppercase;opacity:0.7;margin:16px 0 8px}
+.row{display:flex;gap:10px;align-items:center;margin:8px 0}
+.row label{flex:1;font-size:12px;opacity:0.8}
+.row input,.row select{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 10px;color:#f3efe6;font-family:inherit}
+.row input[type=range]{padding:0}
+.worlds{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow:auto}
+.world-entry{display:flex;gap:10px;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px}
+.w-name{font-weight:700}
+.w-meta{font-size:11px;opacity:0.6;flex:1}
+.world-entry button{padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.06);color:#f3efe6;cursor:pointer}
+.world-entry button:hover{background:rgba(214,162,78,0.25)}
+#inventory .panel{width:min(980px,96vw);display:flex;gap:16px}
+.inv-grid{display:grid;grid-template-columns:repeat(9,56px);grid-auto-rows:56px;gap:4px}
+.inv-slot{width:56px;height:56px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;position:relative;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;cursor:pointer}
+.inv-slot:hover{border-color:rgba(214,162,78,0.5)}
+.craft-area{flex:1;display:flex;flex-direction:column;gap:10px}
+.craft-grid{display:grid;grid-template-columns:repeat(3,56px);gap:4px}
+.craft-slot{width:56px;height:56px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.14);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px}
+.craft-output{display:flex;gap:8px;align-items:center;min-height:64px;background:rgba(214,162,78,0.08);border:1px solid rgba(214,162,78,0.22);border-radius:10px;padding:8px}
+.craft-list{max-height:200px;overflow:auto;display:flex;flex-direction:column;gap:4px}
+.craft-recipe{padding:6px 8px;background:rgba(255,255,255,0.04);border-radius:6px;font-size:11px;cursor:pointer}
+.craft-recipe:hover{background:rgba(255,255,255,0.08)}
+.drag-ghost{background:rgba(18,16,14,0.92);border:1px solid rgba(214,162,78,0.6);padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700;box-shadow:0 8px 20px rgba(0,0,0,0.5)}
+#howto .panel{line-height:1.6;font-size:13px;max-height:80vh;overflow:auto}
+#howto ul{margin-left:18px;margin-top:8px}
+#howto li{margin:4px 0}
+</style>
+</head>
+<body>
+<canvas id="game-canvas"></canvas>
+<div id="ui-root">
+  <div id="menu">
+    <div class="logo">BLOCK<span>WILD</span></div>
+    <div class="subtitle">Original Voxel Survival</div>
+    <button class="menu-btn" id="btn-play" type="button" onclick="window.game&&window.game.quickPlay()">PLAY <small>Quick continue</small></button>
+    <button class="menu-btn" id="btn-create" type="button" onclick="window.game&&window.game.showCreateWorld()">CREATE WORLD <small>New seed</small></button>
+    <button class="menu-btn" id="btn-load" type="button" onclick="window.game&&window.game.showWorlds()">LOAD WORLD <small>Your saves</small></button>
+    <button class="menu-btn" id="btn-settings" type="button" onclick="window.game&&window.game.showSettings()">SETTINGS <small>Graphics & audio</small></button>
+    <button class="menu-btn" id="btn-howto" type="button" onclick="window.game&&window.game.showHowto()">HOW TO PLAY <small>Controls</small></button>
+    <div style="margin-top:18px;font-size:11px;opacity:0.45;text-align:center;max-width:320px;line-height:1.5">A completely original voxel sandbox. No Minecraft assets. Built with WebGL2, Web Workers, and procedural love. Press F3 for debug.</div>
+  </div>
+
+  <div id="hud">
+    <div id="crosshair"></div>
+    <div id="hotbar"></div>
+    <div id="health"></div>
+    <div id="hunger"></div>
+    <div id="block-highlight"></div>
+    <div id="debug"></div>
+  </div>
+
+  <div id="inventory">
+    <div class="panel">
+      <div>
+        <h2>Inventory — E to close</h2>
+        <div class="inv-grid"></div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="menu-btn" style="width:auto" onclick="import('./src/inventory/inventory.js').then(m=>{const inv=window.game.session.inventory; m.sortInventory(inv); window.game.ui.renderInventory();})">SORT</button>
+          <button class="menu-btn" style="width:auto" onclick="window.game.ui.invOpen=false; document.getElementById('inventory').style.display='none'; window.game.canvas.requestPointerLock()">CLOSE</button>
+        </div>
+      </div>
+      <div class="craft-area" id="crafting">
+        <h3>Crafting 3×3 — click hotbar item then grid</h3>
+        <div class="craft-grid"></div>
+        <div class="craft-output"></div>
+        <input id="craft-search" placeholder="Search recipes..." style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px;color:#eee">
+        <div class="craft-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pause">
+    <div class="panel">
+      <h2>Paused</h2>
+      <button class="menu-btn" id="btn-resume" type="button" onclick="window.game&&window.game.ui&&window.game.ui.hidePause()">RESUME</button>
+      <button class="menu-btn" id="btn-pause-settings" type="button" onclick="window.game&&window.game.showSettings(true)">SETTINGS</button>
+      <button class="menu-btn" id="btn-save-exit" type="button" onclick="window.game&&window.game.saveAndExit()">SAVE & EXIT</button>
+    </div>
+  </div>
+
+  <div id="settings">
+    <div class="panel">
+      <h2>Settings</h2>
+      <div class="row"><label>Preset</label><select id="setting-preset"></select></div>
+      <div class="row"><label>FOV <span id="setting-fov-val"></span></label><input type="range" id="setting-fov"></div>
+      <div class="row"><label>Sensitivity <span id="setting-sens-val"></span></label><input type="range" id="setting-sens"></div>
+      <div class="row"><label>Render Distance <span id="setting-render-val"></span></label><input type="range" id="setting-render"></div>
+      <div class="row"><label>Resolution <span id="setting-dpr-val"></span></label><input type="range" id="setting-dpr"></div>
+      <div class="row"><label>Master Volume <span id="setting-master-val"></span></label><input type="range" id="setting-master"></div>
+      <div class="row"><label>Music <span id="setting-music-val"></span></label><input type="range" id="setting-music"></div>
+      <div class="row"><label>SFX <span id="setting-sfx-val"></span></label><input type="range" id="setting-sfx"></div>
+      <h3>Toggles</h3>
+      <div class="row"><label>Bloom</label><input type="checkbox" id="setting-bloom"></div>
+      <div class="row"><label>View Bob</label><input type="checkbox" id="setting-viewBob"></div>
+      <div class="row"><label>Head Bob</label><input type="checkbox" id="setting-headBob"></div>
+      <div class="row"><label>Show Coords</label><input type="checkbox" id="setting-showCoords"></div>
+      <div class="row"><label>Show FPS (F3)</label><input type="checkbox" id="setting-showFps"></div>
+      <div class="row"><label>Subtitles</label><input type="checkbox" id="setting-subtitles"></div>
+      <div class="row"><label>Reduced Motion</label><input type="checkbox" id="setting-reducedMotion"></div>
+      <button class="menu-btn" id="btn-settings-back" type="button" onclick="document.getElementById('settings').style.display='none'; window.game&&window.game.ui&&window.game.ui.showMenu()">BACK</button>
+    </div>
+  </div>
+
+  <div id="world-list">
+    <div class="panel">
+      <h2>Your Worlds</h2>
+      <div class="worlds"></div>
+      <button class="menu-btn" id="btn-worlds-back" type="button" onclick="document.getElementById('world-list').style.display='none'; window.game&&window.game.ui&&window.game.ui.showMenu()">BACK</button>
+    </div>
+  </div>
+
+  <div id="create-world">
+    <div class="panel">
+      <h2>Create World</h2>
+      <div class="row"><label>Name</label><input id="create-name" value="New World"></div>
+      <div class="row"><label>Seed (blank = random)</label><input id="create-seed" placeholder="e.g. wild123"></div>
+      <div class="row"><label>Mode</label><select id="create-mode"><option value="survival">Survival</option><option value="creative">Creative</option></select></div>
+      <div class="row"><label>Difficulty</label><select id="create-diff"><option value="peaceful">Peaceful</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select></div>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="menu-btn" id="btn-create-confirm" type="button" onclick="window.game&&window.game.createWorldFromForm()">CREATE</button>
+        <button class="menu-btn" id="btn-create-back" type="button" onclick="document.getElementById('create-world').style.display='none'; window.game&&window.game.ui&&window.game.ui.showMenu()">BACK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="howto">
+    <div class="panel">
+      <h2>How to Play</h2>
+      <p><strong>BLOCKWILD</strong> is an original voxel survival sandbox. No Minecraft code or assets. Explore, mine, craft, farm, and survive.</p>
+      <h3>Controls</h3>
+      <ul>
+        <li><strong>WASD</strong> move, <strong>Mouse</strong> look, <strong>Space</strong> jump, <strong>Shift</strong> sprint, <strong>Ctrl</strong> crouch</li>
+        <li><strong>Left Click</strong> break, hold to mine. <strong>Right Click</strong> place / use.</li>
+        <li><strong>1-9 / Wheel</strong> hotbar, <strong>E</strong> inventory, <strong>F</strong> interact, <strong>Q</strong> drop, <strong>Esc</strong> pause</li>
+        <li><strong>F3</strong> debug overlay</li>
+      </ul>
+      <h3>First Steps</h3>
+      <ul>
+        <li>Punch tallgrass for fiber, chop a tree, craft planks → bench (Field Bench).</li>
+        <li>Bench gives 3×3 crafting. Make tools. Stone needs a pick.</li>
+        <li>Kiln smelts ore. Coffer stores 27 stacks. Haulers move items.</li>
+        <li>Till soil with hoe, plant seeds, keep water nearby. Berries and grain fill hunger.</li>
+        <li>Build a bedroll to set spawn and skip night if safe.</li>
+        <li>Find Ember Gate (nightglass frame + flint) and Sky Gate for other dimensions.</li>
+      </ul>
+      <h3>Survival</h3>
+      <ul>
+        <li>Health 20, hunger drains sprint and regen. Eat cooked food.</li>
+        <li>Fall damage, drowning, lava, cactus hurt. Water slows, ice is slick.</li>
+        <li>Creatures: duskhares and antlorns flee, bristleboars neutral, nightlurkers and mirelurkers hostile at night or in caves.</li>
+        <li>Spark system: lever → wire → door/lamp/piston/conveyor. Simulate only active networks.</li>
+      </ul>
+      <button class="menu-btn" id="btn-howto-back" type="button" onclick="document.getElementById('howto').style.display='none'; window.game&&window.game.ui&&window.game.ui.showMenu()">BACK</button>
+    </div>
+  </div>
+
+  <div id="tooltip"></div>
+</div>
+<script>
+window.addEventListener('error', (e)=>{ console.error('Global error', e.message, e.error); const d=document.createElement('div'); d.style.cssText='position:fixed;left:10px;bottom:10px;background:rgba(200,0,0,0.85);color:#fff;padding:8px 10px;border-radius:6px;font-size:11px;z-index:99999;max-width:80vw'; d.textContent='JS Error: '+e.message; document.body.appendChild(d); setTimeout(()=>d.remove(),6000); });
+window.addEventListener('click', (e)=>{ const b=e.target.closest&&e.target.closest('.menu-btn'); if(b) console.log('Menu click', b.id); }, true);
+</script>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
